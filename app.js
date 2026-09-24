@@ -68,18 +68,18 @@
   var STATUS = { todos: "Todos", andamento: "Em andamento", realizado: "Realizados", futuro: "Próximos", apoio: "Apoio ao atleta" };
   var BADGE = { andamento: "Em andamento", realizado: "Realizado", futuro: "Em breve", apoio: "Apoio ao atleta" };
   var pf = $("#proj-filters"), pg = $("#proj-grid"), pcur = "todos";
-  var ICON = { Futebol: "⚽", "Judô": "🥋", Surf: "🏄" };
+  var ICON = { Futebol: "⚽", Futsal: "⚽", "Futebol Society": "⚽", "Judô": "🥋", Surf: "🏄" };
   function renderProjetos() {
     pg.innerHTML = "";
     var list = D.projetos.filter(function (p) { return pcur === "todos" || p.status === pcur; })
-      .sort(function (a, b) { return b.ano - a.ano; });
+      .sort(function (a, b) { return (b.ano || 0) - (a.ano || 0); });
     list.forEach(function (p) {
       var foto = p.foto
         ? '<img src="' + esc(p.foto) + '" alt="" loading="lazy">'
         : '<div class="proj__ph" aria-hidden="true">' + (ICON[p.modalidade] || "🏅") + "</div>";
       pg.appendChild(el("article", "proj",
         '<div class="proj__img">' + foto + '<span class="badge badge--' + esc(p.status) + '">' + esc(BADGE[p.status] || p.status) + "</span></div>" +
-        '<div class="proj__body"><small>' + esc(p.modalidade || "") + " · " + esc(p.ano) + (p.local ? " · " + esc(p.local) : "") +
+        '<div class="proj__body"><small>' + esc(p.modalidade || "") + (p.ano ? " · " + esc(p.ano) : "") + (p.local ? " · " + esc(p.local) : "") +
         "</small><h3>" + esc(p.titulo) + "</h3><p>" + esc(p.resumo || "") + "</p></div>"));
     });
     pg.appendChild(el("article", "proj proj--soon", '<div class="proj__body"><h3>Mais histórias a caminho</h3><p>Estamos reunindo o histórico de eventos e projetos já realizados pela Liga para compartilhar aqui, com fotos e resultados.</p></div>'));
