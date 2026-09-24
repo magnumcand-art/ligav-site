@@ -209,11 +209,18 @@
   if (c.endereco) { any = true; cbox.appendChild(el("div", "ci", "<small>Endereço</small>" + esc(c.endereco))); }
   if (!any) cbox.appendChild(el("div", "ci soon", "<small>Canais de atendimento</small>Em breve neste espaço."));
 
-  /* ---------- links diretos: #p-surf, #p-guarapari, #p-super-copa ---------- */
-  var h = location.hash;
-  if (h.indexOf("#p-") === 0) {
-    var pid = h.slice(3);
-    if (pid === "federais") pid = "_federais";
-    if (pid === "_federais" || byId(pid)) { renderParceria(pid); document.getElementById("transparencia").scrollIntoView(); }
+  /* ---------- links diretos: #transparencia, #p-federais, #p-surf, #p-guarapari, #p-super-copa ---------- */
+  function goHash() {
+    var h = location.hash, target = null;
+    if (h.indexOf("#p-") === 0) {
+      var pid = h.slice(3);
+      if (pid === "federais") pid = "_federais";
+      if (pid === "_federais" || byId(pid)) { renderParceria(pid); target = document.getElementById("transparencia"); }
+    } else if (h.length > 1) {
+      target = document.getElementById(h.slice(1));
+    }
+    if (target) { target.scrollIntoView(); }
   }
+  goHash();
+  window.addEventListener("load", function () { setTimeout(goHash, 250); });
 })();
