@@ -105,7 +105,7 @@
   tl.appendChild(el("li", "", "<time>Próximas fases</time><h4>Datas em divulgação</h4><p>Acompanhe esta página e as redes da Liga para os próximos jogos e resultados.</p>"));
 
   /* ---------- transparência (discreta) ---------- */
-  var pills = $("#pills"), box = $("#parceria"), curId = D.parcerias[0].id;
+  var pills = $("#pills"), box = $("#parceria"), curId = "_federais";
 
   function docsHtml(docs) {
     return '<ul class="docs">' + docs.map(function (d) {
@@ -140,9 +140,37 @@
       '<p class="note">O representante responde legal e financeiramente pelo recebimento. Por segurança e pela LGPD, os dados pessoais entregues à Liga <u>não são publicados</u>: aqui aparecem apenas nome do time, valor e comprovante de pagamento.</p>';
   }
 
+  function federaisHtml() {
+    var out = '<div class="panel panel--flat"><div class="phead"><span class="ptag">Transferegov</span><h3>Emendas federais</h3>' +
+      '<p>Emendas parlamentares recebidas pela Liga, com o n\u00famero do Termo de Fomento, o painel do Transferegov e os documentos publicados.</p></div>';
+    D.emendasFederais.forEach(function (e, idx) {
+      var rows = [
+        ["Projeto", e.projeto], ["Munic\u00edpio", e.municipio], ["Ano", e.ano],
+        ["Termo de Fomento", e.termo], ["Concess\u00e3o de Emenda Parlamentar", [e.emenda, e.deputado].filter(Boolean).join(" \u2014 ") || null],
+        ["Valor", e.valor], ["Vig\u00eancia", e.vigencia], ["\u00d3rg\u00e3o concedente", e.concedente],
+        ["Objeto", e.objeto], ["Publica\u00e7\u00e3o oficial", e.dou]
+      ];
+      var body = '<dl class="ficha">' + rows.map(function (r) {
+        return "<dt>" + esc(r[0]) + "</dt><dd>" + (r[1] ? esc(r[1]) : PEND) + "</dd>";
+      }).join("") + "</dl>";
+      if (e.midias && e.midias.length) {
+        body += '<div class="figs">' + e.midias.map(function (m) {
+          return '<figure class="fig"><a href="' + esc(m.arquivo) + '" target="_blank" rel="noopener" aria-label="Abrir: ' + esc(m.titulo) + '"><img src="' + esc(m.thumb) + '" alt="' + esc(m.titulo) + '" loading="lazy"></a><figcaption>' + esc(m.legenda) + "</figcaption></figure>";
+        }).join("") + "</div>";
+        body += '<p class="note">Vers\u00e3o p\u00fablica: por prote\u00e7\u00e3o de dados pessoais (LGPD), CPF, RG, endere\u00e7os residenciais e dados banc\u00e1rios foram tarjados. O documento original est\u00e1 na Plataforma +Brasil e com o \u00f3rg\u00e3o concedente.</p>';
+      } else {
+        body += '<p class="note">Documentos desta emenda ser\u00e3o publicados aqui assim que estiverem dispon\u00edveis. ' + PEND + "</p>";
+      }
+      out += '<details class="emenda" id="e-' + esc(e.id) + '"' + (idx === 0 ? " open" : "") + "><summary>Projeto: " + esc(e.projeto) + "</summary><div>" + body + "</div></details>";
+    });
+    if (D.painelUrl) out += '<p class="note">Consulta p\u00fablica oficial: <a href="' + esc(D.painelUrl) + '" target="_blank" rel="noopener">Painel de Transfer\u00eancias Discricion\u00e1rias e Legais (gov.br) \u2197</a> \u2014 filtrar pelo CNPJ da Liga: ' + esc(D.cnpj) + ".</p>";
+    return out + "</div>";
+  }
+
   function renderParceria(id) {
     curId = id;
     Array.prototype.forEach.call(pills.children, function (b) { b.setAttribute("aria-selected", b.dataset.id === id); });
+    if (id === "_federais") { box.innerHTML = federaisHtml(); return; }
     if (id === "_liga") {
       box.innerHTML = '<div class="panel panel--flat"><h3>Documentos institucionais</h3>' + docsHtml(D.institucional) + "</div>";
       return;
@@ -158,8 +186,8 @@
     html += '<details class="dt" open><summary>Documentos</summary><div>' + docsHtml(p.docs) + "</div></details></div>";
     box.innerHTML = html;
   }
-  D.parcerias.concat([{ id: "_liga", nome: "Documentos da Liga" }]).forEach(function (p) {
-    var b = el("button", "", esc(p.id === "_liga" ? "Documentos da Liga" : p.nome));
+  [{ id: "_federais", nome: "Emendas federais" }].concat(D.parcerias, [{ id: "_liga", nome: "Documentos da Liga" }]).forEach(function (p) {
+    var b = el("button", "", esc(p.nome));
     b.type = "button"; b.setAttribute("role", "tab"); b.dataset.id = p.id;
     b.addEventListener("click", function () { renderParceria(p.id); });
     pills.appendChild(b);
@@ -185,6 +213,7 @@
   var h = location.hash;
   if (h.indexOf("#p-") === 0) {
     var pid = h.slice(3);
-    if (byId(pid)) { renderParceria(pid); document.getElementById("transparencia").scrollIntoView(); }
+    if (pid === "federais") pid = "_federais";
+    if (pid === "_federais" || byId(pid)) { renderParceria(pid); document.getElementById("transparencia").scrollIntoView(); }
   }
 })();

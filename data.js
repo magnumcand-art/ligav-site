@@ -41,6 +41,50 @@ window.LIGA = {
     { icone: "➕", nome: "E muito mais", texto: "A Liga apoia e realiza eventos esportivos em várias modalidades. Tem um esporte, um time ou um projeto para levar ao calendário? Fale com a gente." }
   ],
 
+
+  /* ---------------------------------------------------------
+     EMENDAS FEDERAIS — Transferegov (formato da aba Transparência)
+     Uma entrada por emenda/termo. Para incluir outra, copie o bloco.
+     midias: painel, termo, DOU etc. (thumb = miniatura, arquivo = PDF/imagem)
+     --------------------------------------------------------- */
+  painelUrl: "https://dd-publico.serpro.gov.br/extensions/painel/DiscricionariasInicio.html",
+  emendasFederais: [
+    {
+      id: "viva-varzea-2022",
+      projeto: "Copa Municipal de Vila Velha \u201cViva V\u00e1rzea\u201d",
+      municipio: "Vila Velha \u2013 ES",
+      ano: "2022 (assinatura em 30/12/2022)",
+      termo: "936888/2022 \u2014 Plataforma +Brasil (Processo n\u00ba 71000.064441/2022-00)",
+      emenda: "Emenda Parlamentar n\u00ba 14180008/2022",
+      deputado: "Deputado Federal Neucimar Fraga",
+      concedente: "Minist\u00e9rio da Cidadania \u2014 Secretaria Nacional de Esporte, Educa\u00e7\u00e3o, Lazer e Inclus\u00e3o Social",
+      valor: "R$ 100.000,00",
+      vigencia: "30/12/2022 a 30/12/2023",
+      objeto: "Realiza\u00e7\u00e3o da Copa Municipal de Vila Velha \u201cViva V\u00e1rzea\u201d no Munic\u00edpio de Vila Velha/ES.",
+      dou: "Extrato publicado no Di\u00e1rio Oficial da Uni\u00e3o em 02/01/2023 (Se\u00e7\u00e3o 3, n\u00ba 1, p. 9)",
+      midias: [
+        { titulo: "Painel de Transfer\u00eancias Discricion\u00e1rias e Legais", legenda: "Painel discricion\u00e1rias \u2014 consulta pelo CNPJ da Liga (atualizado em 23/09/2026)", thumb: "assets/emendas/painel-discricionarias.jpg", arquivo: "assets/emendas/painel-discricionarias.jpg" },
+        { titulo: "Termo de Fomento 936888/2022", legenda: "Termo de Fomento 936888/2022 \u2014 vers\u00e3o p\u00fablica (dados pessoais tarjados)", thumb: "assets/emendas/thumb-termo-936888.jpg", arquivo: "docs/termo-de-fomento-936888-2022-versao-publica.pdf" },
+        { titulo: "Publica\u00e7\u00e3o no DOU", legenda: "Extrato do Termo de Fomento no Di\u00e1rio Oficial da Uni\u00e3o (02/01/2023)", thumb: "assets/emendas/thumb-dou-936888.jpg", arquivo: "docs/dou-extrato-termo-de-fomento-936888-2022.pdf" }
+      ]
+    },
+    {
+      id: "super-copa-2026",
+      projeto: "Super Copa da V\u00e1rzea 2026",
+      municipio: "Espírito Santo (v\u00e1rias regi\u00f5es)",
+      ano: "2026",
+      termo: null,
+      emenda: null,
+      deputado: null,
+      concedente: null,
+      valor: "R$ 200.000,00",
+      vigencia: null,
+      objeto: "Realiza\u00e7\u00e3o da Super Copa da V\u00e1rzea 2026, com times de bairro de v\u00e1rias regi\u00f5es do Esp\u00edrito Santo.",
+      dou: null,
+      midias: []
+    }
+  ],
+
   /* ---------------------------------------------------------
      PARCERIAS E EMENDAS (aparecem só na aba Transparência)
      --------------------------------------------------------- */
