@@ -22,6 +22,9 @@
     var p = iso.split("-");
     return p[2] + "/" + p[1] + "/" + p[0];
   };
+  var byId = function (id) {
+    return D.parcerias.filter(function (p) { return p.id === id; })[0];
+  };
 
   /* ---------- menu mobile ---------- */
   var burger = $(".burger"), menu = $("#menu");
@@ -36,16 +39,22 @@
     }
   });
 
-  /* ---------- números do hero ---------- */
-  var stats = [
-    [brl(D.emenda.valorTotal).replace(",00", ""), "em emenda parlamentar"],
-    ["16", "times confirmados na Região Sudeste"],
-    [brl(D.premiacaoSudeste.reduce(function (a, b) { return a + b.valor; }, 0)).replace(",00", ""), "em premiação na Região Sudeste"],
-    [D.atualizadoEm, "última atualização das contas"]
-  ];
+  /* ---------- destaques do hero (só esporte) ---------- */
   var st = $("#stats");
-  stats.forEach(function (s) { st.appendChild(el("li", "", "<b>" + esc(s[0]) + "</b><span>" + esc(s[1]) + "</span>")); });
+  [
+    ["16", "times confirmados na Super Copa da Várzea — Região Sudeste"],
+    ["3+", "modalidades: futebol, judô e surf"],
+    ["ES", "esporte amador do Espírito Santo, de Vila Velha a Guarapari"]
+  ].forEach(function (s) {
+    st.appendChild(el("li", "", "<b>" + esc(s[0]) + "</b><span>" + esc(s[1]) + "</span>"));
+  });
   $("#atualizado").textContent = D.atualizadoEm;
+
+  /* ---------- modalidades ---------- */
+  var mg = $("#mod-grid");
+  D.modalidades.forEach(function (m) {
+    mg.appendChild(el("article", "mod", '<div class="mod__ico" aria-hidden="true">' + m.icone + "</div><h3>" + esc(m.nome) + "</h3><p>" + esc(m.texto) + "</p>"));
+  });
 
   /* ---------- fatos da liga ---------- */
   var facts = $("#facts");
@@ -55,112 +64,127 @@
     facts.appendChild(el("dd", "", esc(f[1])));
   });
 
-  /* ---------- premiação ---------- */
-  var tb = $("#tbl-premio tbody"), tf = $("#tbl-premio tfoot"), tot = 0;
-  D.premiacaoSudeste.forEach(function (p) {
-    tot += p.valor;
-    tb.appendChild(el("tr", "", "<td>" + esc(p.lugar) + '</td><td class="r">' + brl(p.valor) + "</td>"));
-  });
-  tf.appendChild(el("tr", "", '<td>Total em premiação</td><td class="r">' + brl(tot) + "</td>"));
-  if (D.linkTabelas) $("#btn-tabelas").href = D.linkTabelas;
+  /* ---------- projetos e eventos ---------- */
+  var STATUS = { todos: "Todos", andamento: "Em andamento", realizado: "Realizados", futuro: "Próximos", apoio: "Apoio ao atleta" };
+  var BADGE = { andamento: "Em andamento", realizado: "Realizado", futuro: "Em breve", apoio: "Apoio ao atleta" };
+  var pf = $("#proj-filters"), pg = $("#proj-grid"), pcur = "todos";
+  var ICON = { Futebol: "⚽", "Judô": "🥋", Surf: "🏄" };
+  function renderProjetos() {
+    pg.innerHTML = "";
+    var list = D.projetos.filter(function (p) { return pcur === "todos" || p.status === pcur; })
+      .sort(function (a, b) { return b.ano - a.ano; });
+    list.forEach(function (p) {
+      var foto = p.foto
+        ? '<img src="' + esc(p.foto) + '" alt="" loading="lazy">'
+        : '<div class="proj__ph" aria-hidden="true">' + (ICON[p.modalidade] || "🏅") + "</div>";
+      pg.appendChild(el("article", "proj",
+        '<div class="proj__img">' + foto + '<span class="badge badge--' + esc(p.status) + '">' + esc(BADGE[p.status] || p.status) + "</span></div>" +
+        '<div class="proj__body"><small>' + esc(p.modalidade || "") + " · " + esc(p.ano) + (p.local ? " · " + esc(p.local) : "") +
+        "</small><h3>" + esc(p.titulo) + "</h3><p>" + esc(p.resumo || "") + "</p></div>"));
+    });
+    pg.appendChild(el("article", "proj proj--soon", '<div class="proj__body"><h3>Mais histórias a caminho</h3><p>Estamos reunindo o histórico de eventos e projetos já realizados pela Liga para compartilhar aqui, com fotos e resultados.</p></div>'));
+  }
+  function renderProjFilters() {
+    pf.innerHTML = "";
+    Object.keys(STATUS).forEach(function (k) {
+      var b = el("button", "", esc(STATUS[k]));
+      b.type = "button";
+      b.setAttribute("aria-pressed", k === pcur);
+      b.addEventListener("click", function () { pcur = k; renderProjFilters(); renderProjetos(); });
+      pf.appendChild(b);
+    });
+  }
+  renderProjFilters(); renderProjetos();
 
-  /* ---------- linha do tempo ---------- */
-  var tl = $("#timeline");
-  D.marcos.forEach(function (m) {
+  /* ---------- Super Copa: link e linha do tempo ---------- */
+  if (D.linkTabelas) $("#btn-tabelas").href = D.linkTabelas;
+  var tl = $("#timeline"), sc = byId("super-copa");
+  (sc ? sc.marcos : []).forEach(function (m) {
     tl.appendChild(el("li", "", "<time>" + esc(m.data) + "</time><h4>" + esc(m.titulo) + "</h4><p>" + esc(m.texto) + "</p>"));
   });
   tl.appendChild(el("li", "", "<time>Próximas fases</time><h4>Datas em divulgação</h4><p>Acompanhe esta página e as redes da Liga para os próximos jogos e resultados.</p>"));
 
-  /* ---------- painel financeiro ---------- */
-  var money = $("#money"), E = D.emenda;
-  function moneyCard(label, val, pct) {
-    var h = "<small>" + esc(label) + "</small>";
-    if (val == null) return el("div", "m m--pend", h + "<b>Em atualização</b>");
-    h += "<b>" + brl(val) + "</b>";
-    if (pct != null) h += '<div class="bar" aria-hidden="true"><i style="width:' + Math.min(100, pct) + '%"></i></div>';
-    return el("div", "m", h);
-  }
-  money.appendChild(moneyCard("Valor da emenda", E.valorTotal));
-  money.appendChild(moneyCard("Recebido pela Liga", E.recebido, E.recebido != null ? E.recebido / E.valorTotal * 100 : null));
-  money.appendChild(moneyCard("Já executado", E.executado, E.executado != null ? E.executado / E.valorTotal * 100 : null));
+  /* ---------- transparência (discreta) ---------- */
+  var pills = $("#pills"), box = $("#parceria"), curId = D.parcerias[0].id;
 
-  var ficha = $("#ficha");
-  E.ficha.forEach(function (r) {
-    ficha.appendChild(el("dt", "", esc(r[0])));
-    ficha.appendChild(el("dd", "", r[1] ? esc(r[1]) : PEND));
-  });
-
-  /* ---------- plano de aplicação ---------- */
-  var ap = $("#aplicacao"), totalAp = 0;
-  D.aplicacao.forEach(function (g) {
-    var sub = 0;
-    var rows = g.itens.map(function (i) { sub += i.valor; return "<tr><td>" + esc(i.rubrica) + '</td><td class="r">' + brl(i.valor) + "</td></tr>"; }).join("");
-    totalAp += sub;
-    ap.appendChild(el("div", "", "<h4>" + esc(g.grupo) + '</h4><table class="tbl"><thead><tr><th>Rubrica</th><th class="r">Valor</th></tr></thead><tbody>' + rows + '</tbody><tfoot><tr><td>Subtotal</td><td class="r">' + brl(sub) + "</td></tr></tfoot></table>"));
-  });
-  var rest = E.valorTotal - totalAp;
-  ap.appendChild(el("p", "note", "Valor da emenda: <strong>" + brl(E.valorTotal) + "</strong> · Detalhado até aqui: <strong>" + brl(totalAp) + "</strong> · Demais rubricas e regiões: <strong>" + brl(rest) + "</strong> " + PEND));
-
-  /* ---------- documentos ---------- */
-  var filters = $("#filters"), list = $("#docs"), current = "todos";
-  function renderDocs() {
-    list.innerHTML = "";
-    var docs = D.documentos.filter(function (d) { return current === "todos" || d.cat === current; });
-    if (!docs.length) { list.appendChild(el("li", "empty", "Nenhum documento nesta categoria.")); return; }
-    docs.forEach(function (d) {
+  function docsHtml(docs) {
+    return '<ul class="docs">' + docs.map(function (d) {
       var on = !!d.arquivo;
-      var cat = D.categorias.filter(function (c) { return c.id === d.cat; })[0];
-      var meta = [cat ? cat.name || cat.nome : "", d.data ? fmtDate(d.data) : ""].filter(Boolean).join(" · ");
       var act = on
         ? '<a class="btn btn--blue" href="' + esc(d.arquivo) + '" target="_blank" rel="noopener">Abrir PDF</a>'
         : '<span class="pend">Em breve</span>';
-      list.appendChild(el("li", "doc" + (on ? "" : " doc--off"),
-        '<div class="doc__ico" aria-hidden="true">PDF</div><div class="doc__t"><strong>' + esc(d.titulo) + "</strong><small>" + esc(meta) + "</small></div>" + act));
-    });
+      return '<li class="doc' + (on ? "" : " doc--off") + '"><div class="doc__ico" aria-hidden="true">PDF</div><div class="doc__t"><strong>' +
+        esc(d.titulo) + "</strong>" + (d.data ? "<small>" + fmtDate(d.data) + "</small>" : "") + "</div>" + act + "</li>";
+    }).join("") + "</ul>";
   }
-  function renderFilters() {
-    filters.innerHTML = "";
-    [{ id: "todos", nome: "Todos" }].concat(D.categorias).forEach(function (c) {
-      var b = el("button", "", esc(c.nome));
-      b.type = "button";
-      b.setAttribute("aria-pressed", c.id === current);
-      b.addEventListener("click", function () { current = c.id; renderFilters(); renderDocs(); });
-      filters.appendChild(b);
+  function aplicacaoHtml(p) {
+    if (!p.aplicacao || !p.aplicacao.length) {
+      return '<p class="note">O plano de aplicação será publicado aqui assim que estiver aprovado. ' + PEND + "</p>";
+    }
+    var totalAp = 0, out = "";
+    p.aplicacao.forEach(function (g) {
+      var sub = 0;
+      var rows = g.itens.map(function (i) { sub += i.valor; return "<tr><td>" + esc(i.rubrica) + '</td><td class="r">' + brl(i.valor) + "</td></tr>"; }).join("");
+      totalAp += sub;
+      out += "<h4>" + esc(g.grupo) + '</h4><table class="tbl"><thead><tr><th>Rubrica</th><th class="r">Valor</th></tr></thead><tbody>' + rows + '</tbody><tfoot><tr><td>Subtotal</td><td class="r">' + brl(sub) + "</td></tr></tfoot></table>";
     });
+    if (D.premiacaoSudeste && p.extra === "premiacao") {
+      out += "<h4>Premiação — Região Sudeste</h4><ul class=\"plain\">" + D.premiacaoSudeste.map(function (x) { return "<li>" + esc(x.lugar) + ": <strong>" + brl(x.valor) + "</strong></li>"; }).join("") + "</ul>";
+    }
+    return out;
   }
-  renderFilters(); renderDocs();
+  function premiacaoHtml() {
+    return "<p>Times sem CNPJ formalizam um <strong>representante legal</strong> por meio de ata, para receber a premiação com segurança e transparência.</p>" +
+      "<h4>A ata deve conter</h4><ul class=\"plain\"><li>Assinatura de, no mínimo, 3 membros do time</li><li>Nome e CPF do representante legal nomeado</li><li>Dados bancários completos (banco, agência, conta e tipo)</li><li>Assinatura e aceite do representante nomeado</li><li>Data e registro formal</li></ul>" +
+      "<h4>Documentos necessários</h4><ul class=\"plain\"><li>Cópia da ata assinada</li><li>Cópia do CPF do representante legal</li><li>Comprovante da conta bancária</li></ul>" +
+      '<p class="note">O representante responde legal e financeiramente pelo recebimento. Por segurança e pela LGPD, os dados pessoais entregues à Liga <u>não são publicados</u>: aqui aparecem apenas nome do time, valor e comprovante de pagamento.</p>';
+  }
 
-  /* ---------- abas ---------- */
-  var tabs = document.querySelectorAll(".tabs button");
-  function openTab(id) {
-    tabs.forEach(function (t) { t.setAttribute("aria-selected", t.dataset.tab === id); });
-    document.querySelectorAll(".tabpanel").forEach(function (p) { p.hidden = p.id !== "tab-" + id; });
+  function renderParceria(id) {
+    curId = id;
+    Array.prototype.forEach.call(pills.children, function (b) { b.setAttribute("aria-selected", b.dataset.id === id); });
+    if (id === "_liga") {
+      box.innerHTML = '<div class="panel panel--flat"><h3>Documentos institucionais</h3>' + docsHtml(D.institucional) + "</div>";
+      return;
+    }
+    var p = byId(id);
+    var html = '<div class="panel panel--flat"><div class="phead"><span class="ptag">' + esc(p.tag) + "</span><h3>" + esc(p.nome) + "</h3><p>" + esc(p.resumo) + "</p></div>";
+    html += p.aviso ? '<div class="alertbox">' + esc(p.aviso) + "</div>" : "";
+    html += '<dl class="ficha">' + p.ficha.map(function (r) {
+      return "<dt>" + esc(r[0]) + "</dt><dd>" + (r[1] ? esc(r[1]) : PEND) + "</dd>";
+    }).join("") + "</dl>";
+    html += '<details class="dt"><summary>Aplicação dos recursos</summary><div>' + aplicacaoHtml(p) + "</div></details>";
+    if (p.extra === "premiacao") html += '<details class="dt"><summary>Como os times recebem a premiação</summary><div>' + premiacaoHtml() + "</div></details>";
+    html += '<details class="dt" open><summary>Documentos</summary><div>' + docsHtml(p.docs) + "</div></details></div>";
+    box.innerHTML = html;
   }
-  tabs.forEach(function (t) { t.addEventListener("click", function () { openTab(t.dataset.tab); }); });
-  document.addEventListener("click", function (e) {
-    var g = e.target.closest && e.target.closest("[data-goto]");
-    if (g) { e.preventDefault(); openTab(g.dataset.goto); }
+  D.parcerias.concat([{ id: "_liga", nome: "Documentos da Liga" }]).forEach(function (p) {
+    var b = el("button", "", esc(p.id === "_liga" ? "Documentos da Liga" : p.nome));
+    b.type = "button"; b.setAttribute("role", "tab"); b.dataset.id = p.id;
+    b.addEventListener("click", function () { renderParceria(p.id); });
+    pills.appendChild(b);
   });
+  renderParceria(curId);
 
   /* ---------- contato ---------- */
-  var c = D.contato, box = $("#contact"), any = false;
-  function ci(href, label, value, cls) {
+  var c = D.contato, cbox = $("#contact"), any = false;
+  function ci(href, label, value) {
     any = true;
     var a = el("a", "ci", "<small>" + esc(label) + "</small>" + esc(value));
-    a.href = href; if (cls) a.className += " " + cls;
+    a.href = href;
     if (/^https?:/.test(href)) { a.target = "_blank"; a.rel = "noopener"; }
-    box.appendChild(a);
+    cbox.appendChild(a);
   }
   if (c.whatsapp) ci("https://wa.me/" + c.whatsapp.replace(/\D/g, ""), "WhatsApp", "Falar com a Liga");
   if (c.email) ci("mailto:" + c.email, "E-mail", c.email);
   if (c.instagram) ci(c.instagram, "Instagram", c.instagram.replace(/^https?:\/\/(www\.)?/, ""));
-  if (c.endereco) { any = true; box.appendChild(el("div", "ci", "<small>Endereço</small>" + esc(c.endereco))); }
-  if (!any) box.appendChild(el("div", "ci soon", "<small>Canais de atendimento</small>Em breve neste espaço."));
+  if (c.endereco) { any = true; cbox.appendChild(el("div", "ci", "<small>Endereço</small>" + esc(c.endereco))); }
+  if (!any) cbox.appendChild(el("div", "ci soon", "<small>Canais de atendimento</small>Em breve neste espaço."));
 
-  /* ---------- abre a aba certa se vier com #documentos etc ---------- */
-  var h = location.hash.replace("#", "");
-  if (["resumo", "aplicacao", "documentos", "premiacao"].indexOf(h) > -1) {
-    openTab(h);
-    document.getElementById("transparencia").scrollIntoView();
+  /* ---------- links diretos: #p-surf, #p-guarapari, #p-super-copa ---------- */
+  var h = location.hash;
+  if (h.indexOf("#p-") === 0) {
+    var pid = h.slice(3);
+    if (byId(pid)) { renderParceria(pid); document.getElementById("transparencia").scrollIntoView(); }
   }
 })();
